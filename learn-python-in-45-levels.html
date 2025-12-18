@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Python Quest — 45 Levels</title>
+  <!-- CodeMirror core + Python mode + hints -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+  <style>
+    body { font-family: "Trebuchet MS", Arial, sans-serif; background: #1c1f26; color: #e9edf3; margin: 0; }
+    header { background: #11151c; padding: 16px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid #2a3140; }
+    header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+    .hud { display:flex; gap:16px; font-size: 14px; }
+    .hud span { background:#232936; padding:8px 12px; border-radius:8px; border:1px solid #2f3748; }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .map { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .node { padding: 10px; border-radius: 8px; text-align: center; border:1px solid #2a3140; background:#232936; }
+    .node.locked { opacity:0.5; }
+    .node.active { border-color:#6cc16f; box-shadow:0 0 0 2px rgba(108,193,111,0.2); }
+    .node.completed { border-color:#4aa3ff; }
+    .legend { font-size:12px; color:#a7b0c2; margin-bottom: 16px; }
+    .level { display:none; border:1px solid #2f3748; border-radius:12px; background:#232936; padding:16px; margin-bottom: 24px; }
+    .level.active { display:block; }
+    .level h2 { margin:0 0 6px 0; font-size:18px; }
+    .level p { margin:0 0 12px 0; color:#b9c3d6; }
+    .editor-wrap { border:1px solid #2a3140; border-radius:8px; overflow: hidden; }
+    .editor { height: 220px; }
+    .controls { margin-top: 12px; display:flex; gap:8px; align-items:center; }
+    button { background:#6cc16f; border:none; color:#0f1218; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
+    button.secondary { background:#4aa3ff; color:#0f1218; }
+    button.ghost { background:#2a3140; color:#e9edf3; }
+    .result { margin-top: 12px; font-weight: 700; }
+    .hint { margin-top: 8px; font-size: 12px; color:#a7b0c2; }
+    .footer { text-align:center; color:#8fa1bb; padding: 16px 0 32px; font-size:12px; }
+    /* Badges */
+    .badges { display:flex; gap:8px; flex-wrap: wrap; margin-top:8px; }
+    .badge { font-size:11px; padding:6px 10px; background:#2a3140; border:1px solid #364057; color:#a7b0c2; border-radius:999px; }
+    .badge.win { background:#1f3b2a; border-color:#2c5a3d; color:#93d79c; }
+    /* CodeMirror */
+    .CodeMirror { height: 220px; }
+    .help { font-size:12px; color:#9fb3d1; margin-left:auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🐍 Python Quest — Learn by Adventure</h1>
+    <div class="hud">
+      <span id="progress">Progress: 0 / 45</span>
+      <span id="score">Score: 0</span>
+      <span id="streak">Streak: 0</span>
+      <span class="help">Tip: Press Ctrl+Space for code completion</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="legend">Nodes: green = current, blue = completed, grey = locked</div>
+    <div id="map" class="map"></div>
+
+    <!-- Levels -->
+    <!-- Variables & Data Types (1–5) -->
+    <div class="level active" id="level1">
+      <h2>Level 1: Unlock the gate</h2>
+      <p>Assign a number to a variable <code>x</code> to power the gate.</p>
+      <div class="badges"><div class="badge">Variables</div><div class="badge">Assignment</div></div>
+      <div class="editor-wrap"><textarea id="editor1">x = 7</textarea></div>
+      <div class="controls">
+        <button onclick="runLevel(1)">Run code</button>
+        <button class="ghost" onclick="resetLevel(1)">Reset</button>
+      </div>
+      <div class="result" id="result1"></div>
+      <div class="hint">Hint: Use x = 7</div>
+    </div>
+
+    <div class="level" id="level2">
+      <h2>Level 2: Light the torch</h2>
+      <p>Create a string <code>name</code> with your hero’s name.</p>
+      <div class="badges"><div class="badge">Strings</div><div class="badge">Literals</div></div>
+      <div class="editor-wrap"><textarea id="editor2">name = "Marcus"</textarea></div>
+      <div class="controls">
+        <button onclick="runLevel(2)">Run code</button>
+        <button class="ghost" onclick="resetLevel(2)">Reset</button>
+      </div>
+      <div class="result" id="result2"></div>
+      <div class="hint">Hint: name = "Ada"</div>
+    </div>
+
+    <div class="level" id="level3">
+      <h2>Level 3: Collect the treasure</h2>
+      <p>Create a list with numbers 1, 2, 3.</p>
+      <div class="badges"><div class="badge">Lists</div></div>
+      <div class="editor-wrap"><textarea id="editor3">items = [1, 2, 3]</textarea></div>
+      <div class="controls">
+        <button onclick="runLevel(3)">Run code</button>
+        <button class="ghost" onclick="resetLevel(3)">Reset</button>
+      </div>
+      <div class="result" id="result3"></div>
+      <div class="hint">Hint: items = [1, 2, 3]</div>
+    </div>
+
+    <div class="level" id="level4">
+      <h2>Level 4: Cross the bridge</h2>
+      <p>Make a tuple named <code>coords</code> with two numbers.</p>
+      <div class="badges"><div class="badge">Tuples</div></div>
+      <div class="editor-wrap"><textarea id="editor4">coords = (4, 9)</textarea></div>
+      <div class="controls"><button onclick="runLevel(4)">Run code</button><button class="ghost" onclick="resetLevel(4)">Reset</button></div>
+      <div class="result" id="result4"></div>
+      <div class="hint">Hint: coords = (x, y)</div>
+    </div>
+
+    <div class="level" id="level5">
+      <h2>Level 5: Gear up</h2>
+      <p>Convert the string <code>"5"</code> to an integer and store it in <code>n</code>.</p>
+      <div class="badges"><div class="badge">Type conversion</div></div>
+      <div class="editor-wrap"><textarea id="editor5">n = int("5")</textarea></div>
+      <div class="controls"><button onclick="runLevel(5)">Run code</button><button class="ghost" onclick="resetLevel(5)">Reset</button></div>
+      <div class="result" id="result5"></div>
+      <div class="hint">Hint: n = int("5")</div>
+    </div>
+
+    <!-- Strings (6–10) -->
+    <div class="level" id="level6">
+      <h2>Level 6: Shout the password</h2>
+      <p>Uppercase the string in <code>word</code> using a method.</p>
+      <div class="badges"><div class="badge">String methods</div></div>
+      <div class="editor-wrap"><textarea id="editor6">word = "open"\nword = word.upper()</textarea></div>
+      <div class="controls"><button onclick="runLevel(6)">Run code</button><button class="ghost" onclick="resetLevel(6)">Reset</button></div>
+      <div class="result" id="result6"></div>
+      <div class="hint">Hint: word.upper()</div>
+    </div>
+
+    <div class="level" id="level7">
+      <h2>Level 7: Whisper the secret</h2>
+      <p>Lowercase <code>msg</code> using a method.</p>
+      <div class="badges"><div class="badge">String methods</div></div>
+      <div class="editor-wrap"><textarea id="editor7">msg = "LOUD"\nmsg = msg.lower()</textarea></div>
+      <div class="controls"><button onclick="runLevel(7)">Run code</button><button class="ghost" onclick="resetLevel(7)">Reset</button></div>
+      <div class="result" id="result7"></div>
+      <div class="hint">Hint: msg.lower()</div>
+    </div>
+
+    <div class="level" id="level8">
+      <h2>Level 8: Slice the scroll</h2>
+      <p>Slice <code>text</code> to get its first three characters.</p>
+      <div class="badges"><div class="badge">Slicing</div></div>
+      <div class="editor-wrap"><textarea id="editor8">text = "scroll"\npart = text[0:3]</textarea></div>
+      <div class="controls"><button onclick="runLevel(8)">Run code</button><button class="ghost" onclick="resetLevel(8)">Reset</button></div>
+      <div class="result" id="result8"></div>
+      <div class="hint">Hint: text[0:3]</div>
+    </div>
+
+    <div class="level" id="level9">
+      <h2>Level 9: Decode the spell</h2>
+      <p>Reverse <code>secret</code> using slicing.</p>
+      <div class="badges"><div class="badge">Reverse slicing</div></div>
+      <div class="editor-wrap"><textarea id="editor9">secret = "abracadabra"\nrev = secret[::-1]</textarea></div>
+      <div class="controls"><button onclick="runLevel(9)">Run code</button><button class="ghost" onclick="resetLevel(9)">Reset</button></div>
+      <div class="result" id="result9"></div>
+      <div class="hint">Hint: secret[::-1]</div>
+    </div>
+
+    <div class="level" id="level10">
+      <h2>Level 10: Etch the message</h2>
+      <p>Use an f-string to include <code>name</code> into <code>message</code>.</p>
+      <div class="badges"><div class="badge">f-strings</div></div>
+      <div class="editor-wrap"><textarea id="editor10">name = "Ada"\nmessage = f"Hello {name}"</textarea></div>
+      <div class="controls"><button onclick="runLevel(10)">Run code</button><button class="ghost" onclick="resetLevel(10)">Reset</button></div>
+      <div class="result" id="result10"></div>
+      <div class="hint">Hint: f"Hello {name}"</div>
+    </div>
+
+    <!-- Lists (11–15) -->
+    <div class="level" id="level11">
+      <h2>Level 11: Pack provisions</h2>
+      <p>Append <code>"rope"</code> to the <code>bag</code> list.</p>
+      <div class="badges"><div class="badge">Lists</div><div class="badge">append</div></div>
+      <div class="editor-wrap"><textarea id="editor11">bag = []\nbag.append("rope")</textarea></div>
+      <div class="controls"><button onclick="runLevel(11)">Run code</button><button class="ghost" onclick="resetLevel(11)">Reset</button></div>
+      <div class="result" id="result11"></div>
+      <div class="hint">Hint: bag.append("rope")</div>
+    </div>
+
+    <div class="level" id="level12">
+      <h2>Level 12: Count the coins</h2>
+      <p>Sum all numbers in <code>coins</code> with a for loop and store in <code>total</code>.</p>
+      <div class="badges"><div class="badge">for loop</div></div>
+      <div class="editor-wrap"><textarea id="editor12">coins = [1,2,3]\ntotal = 0\nfor c in coins:\n    total += c</textarea></div>
+      <div class="controls"><button onclick="runLevel(12)">Run code</button><button class="ghost" onclick="resetLevel(12)">Reset</button></div>
+      <div class="result" id="result12"></div>
+      <div class="hint">Hint: for c in coins: total += c</div>
+    </div>
+
+    <div class="level" id="level13">
+      <h2>Level 13: Forge upgrades</h2>
+      <p>Use a list comprehension to double each number in <code>nums</code> into <code>out</code>.</p>
+      <div class="badges"><div class="badge">List comprehension</div></div>
+      <div class="editor-wrap"><textarea id="editor13">nums = [1,2,3]\nout = [x*2 for x in nums]</textarea></div>
+      <div class="controls"><button onclick="runLevel(13)">Run code</button><button class="ghost" onclick="resetLevel(13)">Reset</button></div>
+      <div class="result" id="result13"></div>
+      <div class="hint">Hint: [x*2 for x in nums]</div>
+    </div>
+
+    <div class="level" id="level14">
+      <h2>Level 14: Sort the pack</h2>
+      <p>Sort <code>items</code> in ascending order in place.</p>
+      <div class="badges"><div class="badge">List methods</div></div>
+      <div class="editor-wrap"><textarea id="editor14">items = [3,1,2]\nitems.sort()</textarea></div>
+      <div class="controls"><button onclick="runLevel(14)">Run code</button><button class="ghost" onclick="resetLevel(14)">Reset</button></div>
+      <div class="result" id="result14"></div>
+      <div class="hint">Hint: items.sort()</div>
+    </div>
+
+    <div class="level" id="level15">
+      <h2>Level 15: Stack the crates</h2>
+      <p>Create a nested list <code>grid</code> with two rows.</p>
+      <div class="badges"><div class="badge">Nested lists</div></div>
+      <div class="editor-wrap"><textarea id="editor15">grid = [[1,2],[3,4]]</textarea></div>
+      <div class="controls"><button onclick="runLevel(15)">Run code</button><button class="ghost" onclick="resetLevel(15)">Reset</button></div>
+      <div class="result" id="result15"></div>
+      <div class="hint">Hint: [[...],[...]]</div>
+    </div>
+
+    <!-- Dictionaries (16–20) -->
+    <div class="level" id="level16">
+      <h2>Level 16: Feed the dragon</h2>
+      <p>Create dict <code>food</code> mapping "apple" to 2.</p>
+      <div class="badges"><div class="badge">Dictionaries</div></div>
+      <div class="editor-wrap"><textarea id="editor16">food = {"apple": 2}</textarea></div>
+      <div class="controls"><button onclick="runLevel(16)">Run code</button><button class="ghost" onclick="resetLevel(16)">Reset</button></div>
+      <div class="result" id="result16"></div>
+      <div class="hint">Hint: {"key": value}</div>
+    </div>
+
+    <div class="level" id="level17">
+      <h2>Level 17: Check the pantry</h2>
+      <p>Read value for <code>"apple"</code> from <code>food</code> into <code>qty</code>.</p>
+      <div class="badges"><div class="badge">Indexing</div></div>
+      <div class="editor-wrap"><textarea id="editor17">food = {"apple":2}\nqty = food["apple"]</textarea></div>
+      <div class="controls"><button onclick="runLevel(17)">Run code</button><button class="ghost" onclick="resetLevel(17)">Reset</button></div>
+      <div class="result" id="result17"></div>
+      <div class="hint">Hint: food["apple"]</div>
+    </div>
+
+    <div class="level" id="level18">
+      <h2>Level 18: Ledger of offerings</h2>
+      <p>Loop over <code>offerings</code> with <code>items()</code> and tally into <code>total</code>.</p>
+      <div class="badges"><div class="badge">Dict iteration</div></div>
+      <div class="editor-wrap"><textarea id="editor18">offerings = {"gold":3,"silver":2}\ntotal = 0\nfor k, v in offerings.items():\n    total += v</textarea></div>
+      <div class="controls"><button onclick="runLevel(18)">Run code</button><button class="ghost" onclick="resetLevel(18)">Reset</button></div>
+      <div class="result" id="result18"></div>
+      <div class="hint">Hint: for k, v in d.items()</div>
+    </div>
+
+    <div class="level" id="level19">
+      <h2>Level 19: Add to stores</h2>
+      <p>Add a new key <code>"bread"</code> to <code>food</code> with value 3.</p>
+      <div class="badges"><div class="badge">Dict update</div></div>
+      <div class="editor-wrap"><textarea id="editor19">food = {"apple":2}\nfood["bread"] = 3</textarea></div>
+      <div class="controls"><button onclick="runLevel(19)">Run code</button><button class="ghost" onclick="resetLevel(19)">Reset</button></div>
+      <div class="result" id="result19"></div>
+      <div class="hint">Hint: d["key"] = value</div>
+    </div>
+
+    <div class="level" id="level20">
+      <h2>Level 20: Guild roster</h2>
+      <p>Create nested dict <code>users</code> with id1 → name "Ada".</p>
+      <div class="badges"><div class="badge">Nested dicts</div></div>
+      <div class="editor-wrap"><textarea id="editor20">users = {"id1": {"name": "Ada"}}</textarea></div>
+      <div class="controls"><button onclick="runLevel(20)">Run code</button><button class="ghost" onclick="resetLevel(20)">Reset</button></div>
+      <div class="result" id="result20"></div>
+      <div class="hint">Hint: {"id": {"key": "value"}}</div>
+    </div>
+
+    <!-- Control flow (21–25) -->
+    <div class="level" id="level21">
+      <h2>Level 21: Trial of judgment</h2>
+      <p>Write an <code>if</code> that sets <code>status</code> to "safe" if <code>hp</code> &gt; 50.</p>
+      <div class="badges"><div class="badge">if</div></div>
+      <div class="editor-wrap"><textarea id="editor21">hp = 75\nstatus = ""\nif hp > 50:\n    status = "safe"</textarea></div>
+      <div class="controls"><button onclick="runLevel(21)">Run code</button><button class="ghost" onclick="resetLevel(21)">Reset</button></div>
+      <div class="result" id="result21"></div>
+      <div class="hint">Hint: if hp > 50:</div>
+    </div>
+
+    <div class="level" id="level22">
+      <h2>Level 22: Path of decisions</h2>
+      <p>Use <code>if/else</code> to set <code>status</code> to "safe" or "danger".</p>
+      <div class="badges"><div class="badge">if/else</div></div>
+      <div class="editor-wrap"><textarea id="editor22">hp = 40\nif hp > 50:\n    status = "safe"\nelse:\n    status = "danger"</textarea></div>
+      <div class="controls"><button onclick="runLevel(22)">Run code</button><button class="ghost" onclick="resetLevel(22)">Reset</button></div>
+      <div class="result" id="result22"></div>
+      <div class="hint">Hint: else:</div>
+    </div>
+
+    <div class="level" id="level23">
+      <h2>Level 23: The many doors</h2>
+      <p>Use <code>elif</code> for three cases: &lt;50 → "danger", 50–80 → "caution", &gt;80 → "safe".</p>
+      <div class="badges"><div class="badge">elif</div></div>
+      <div class="editor-wrap"><textarea id="editor23">hp = 65\nif hp < 50:\n    status = "danger"\nelif hp <= 80:\n    status = "caution"\nelse:\n    status = "safe"</textarea></div>
+      <div class="controls"><button onclick="runLevel(23)">Run code</button><button class="ghost" onclick="resetLevel(23)">Reset</button></div>
+      <div class="result" id="result23"></div>
+      <div class="hint">Hint: elif hp <= 80:</div>
+    </div>
+
+    <div class="level" id="level24">
+      <h2>Level 24: Endless corridor</h2>
+      <p>Use a <code>while</code> loop to count to 3 into <code>count</code>.</p>
+      <div class="badges"><div class="badge">while</div></div>
+      <div class="editor-wrap"><textarea id="editor24">count = 0\nwhile count < 3:\n    count += 1</textarea></div>
+      <div class="controls"><button onclick="runLevel(24)">Run code</button><button class="ghost" onclick="resetLevel(24)">Reset</button></div>
+      <div class="result" id="result24"></div>
+      <div class="hint">Hint: while count &lt; 3</div>
+    </div>
+
+    <div class="level" id="level25">
+      <h2>Level 25: Avoid the traps</h2>
+      <p>Use <code>continue</code> to skip adding 3 to <code>total</code> when looping 1–5.</p>
+      <div class="badges"><div class="badge">continue</div></div>
+      <div class="editor-wrap"><textarea id="editor25">total = 0\nfor i in [1,2,3,4,5]:\n    if i == 3:\n        continue\n    total += i</textarea></div>
+      <div class="controls"><button onclick="runLevel(25)">Run code</button><button class="ghost" onclick="resetLevel(25)">Reset</button></div>
+      <div class="result" id="result25"></div>
+      <div class="hint">Hint: continue</div>
+    </div>
+
+    <!-- Functions (26–30) -->
+    <div class="level" id="level26">
+      <h2>Level 26: Call the sage</h2>
+      <p>Define a function <code>greet()</code> that prints "Hi".</p>
+      <div class="badges"><div class="badge">def</div></div>
+      <div class="editor-wrap"><textarea id="editor26">def greet():\n    print("Hi")</textarea></div>
+      <div class="controls"><button onclick="runLevel(26)">Run code</button><button class="ghost" onclick="resetLevel(26)">Reset</button></div>
+      <div class="result" id="result26"></div>
+      <div class="hint">Hint: def greet():</div>
+    </div>
+
+    <div class="level" id="level27">
+      <h2>Level 27: Herald’s message</h2>
+      <p>Define <code>greet(name)</code> that returns "Hello {name}".</p>
+      <div class="badges"><div class="badge">params</div><div class="badge">return</div></div>
+      <div class="editor-wrap"><textarea id="editor27">def greet(name):\n    return f"Hello {name}"</textarea></div>
+      <div class="controls"><button onclick="runLevel(27)">Run code</button><button class="ghost" onclick="resetLevel(27)">Reset</button></div>
+      <div class="result" id="result27"></div>
+      <div class="hint">Hint: return f"Hello {name}"</div>
+    </div>
+
+    <div class="level" id="level28">
+      <h2>Level 28: Sum the runes</h2>
+      <p>Define <code>add(a,b)</code> that returns <code>a+b</code>.</p>
+      <div class="badges"><div class="badge">return</div></div>
+      <div class="editor-wrap"><textarea id="editor28">def add(a, b):\n    return a + b</textarea></div>
+      <div class="controls"><button onclick="runLevel(28)">Run code</button><button class="ghost" onclick="resetLevel(28)">Reset</button></div>
+      <div class="result" id="result28"></div>
+      <div class="hint">Hint: return a + b</div>
+    </div>
+
+    <div class="level" id="level29">
+      <h2>Level 29: Default path</h2>
+      <p>Define <code>greet(name="Ada")</code> returning "Hello Ada" if name not provided.</p>
+      <div class="badges"><div class="badge">defaults</div></div>
+      <div class="editor-wrap"><textarea id="editor29">def greet(name="Ada"):\n    return f"Hello {name}"</textarea></div>
+      <div class="controls"><button onclick="runLevel(29)">Run code</button><button class="ghost" onclick="resetLevel(29)">Reset</button></div>
+      <div class="result" id="result29"></div>
+      <div class="hint">Hint: name="Ada"</div>
+    </div>
+
+    <div class="level" id="level30">
+      <h2>Level 30: The factorial rite</h2>
+      <p>Write recursive <code>factorial(n)</code>: if n==0 return 1 else return n*factorial(n-1).</p>
+      <div class="badges"><div class="badge">recursion</div></div>
+      <div class="editor-wrap"><textarea id="editor30">def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n - 1)</textarea></div>
+      <div class="controls"><button onclick="runLevel(30)">Run code</button><button class="ghost" onclick="resetLevel(30)">Reset</button></div>
+      <div class="result" id="result30"></div>
+      <div class="hint">Hint: if n == 0: return 1</div>
+    </div>
+
+    <!-- Classes & OOP (31–35) -->
+    <div class="level" id="level31">
+      <h2>Level 31: Train the knight</h2>
+      <p>Define class <code>Knight</code>.</p>
+      <div class="badges"><div class="badge">class</div></div>
+      <div class="editor-wrap"><textarea id="editor31">class Knight:\n    pass</textarea></div>
+      <div class="controls"><button onclick="runLevel(31)">Run code</button><button class="ghost" onclick="resetLevel(31)">Reset</button></div>
+      <div class="result" id="result31"></div>
+      <div class="hint">Hint: class Name:</div>
+    </div>
+
+    <div class="level" id="level32">
+      <h2>Level 32: Arm the knight</h2>
+      <p>Add <code>__init__(self, name, strength)</code> to store attributes.</p>
+      <div class="badges"><div class="badge">__init__</div></div>
+      <div class="editor-wrap"><textarea id="editor32">class Knight:\n    def __init__(self, name, strength):\n        self.name = name\n        self.strength = strength</textarea></div>
+      <div class="controls"><button onclick="runLevel(32)">Run code</button><button class="ghost" onclick="resetLevel(32)">Reset</button></div>
+      <div class="result" id="result32"></div>
+      <div class="hint">Hint: def __init__(...)</div>
+    </div>
+
+    <div class="level" id="level33">
+      <h2>Level 33: Battle cry</h2>
+      <p>Add method <code>attack(self)</code> that returns "For honor!".</p>
+      <div class="badges"><div class="badge">methods</div></div>
+      <div class="editor-wrap"><textarea id="editor33">class Knight:\n    def __init__(self, name, strength):\n        self.name = name\n        self.strength = strength\n    def attack(self):\n        return "For honor!"</textarea></div>
+      <div class="controls"><button onclick="runLevel(33)">Run code</button><button class="ghost" onclick="resetLevel(33)">Reset</button></div>
+      <div class="result" id="result33"></div>
+      <div class="hint">Hint: def attack(self):</div>
+    </div>
+
+    <div class="level" id="level34">
+      <h2>Level 34: Lineage</h2>
+      <p>Create <code>Mage</code> inheriting from <code>Character</code>.</p>
+      <div class="badges"><div class="badge">inheritance</div></div>
+      <div class="editor-wrap"><textarea id="editor34">class Character:\n    pass\nclass Mage(Character):\n    pass</textarea></div>
+      <div class="controls"><button onclick="runLevel(34)">Run code</button><button class="ghost" onclick="resetLevel(34)">Reset</button></div>
+      <div class="result" id="result34"></div>
+      <div class="hint">Hint: class Child(Parent):</div>
+    </div>
+
+    <div class="level" id="level35">
+      <h2>Level 35: Many forms</h2>
+      <p>Override <code>speak()</code> in <code>Mage</code> to return "Arcana!".</p>
+      <div class="badges"><div class="badge">polymorphism</div></div>
+      <div class="editor-wrap"><textarea id="editor35">class Character:\n    def speak(self):\n        return "Hello"\nclass Mage(Character):\n    def speak(self):\n        return "Arcana!"</textarea></div>
+      <div class="controls"><button onclick="runLevel(35)">Run code</button><button class="ghost" onclick="resetLevel(35)">Reset</button></div>
+      <div class="result" id="result35"></div>
+      <div class="hint">Hint: def speak(self):</div>
+    </div>
+
+    <!-- Files & Modules (36–40) -->
+    <div class="level" id="level36">
+      <h2>Level 36: Open the tome</h2>
+      <p>Open <code>"file.txt"</code> for reading to <code>f</code>.</p>
+      <div class="badges"><div class="badge">open()</div></div>
+      <div class="editor-wrap"><textarea id="editor36">f = open("file.txt", "r")</textarea></div>
+      <div class="controls"><button onclick="runLevel(36)">Run code</button><button class="ghost" onclick="resetLevel(36)">Reset</button></div>
+      <div class="result" id="result36"></div>
+      <div class="hint">Hint: open("file.txt","r")</div>
+    </div>
+
+    <div class="level" id="level37">
+      <h2>Level 37: Read the lines</h2>
+      <p>Read from <code>f</code> into <code>content</code>.</p>
+      <div class="badges"><div class="badge">read()</div></div>
+      <div class="editor-wrap"><textarea id="editor37">f = open("file.txt", "r")\ncontent = f.read()</textarea></div>
+      <div class="controls"><button onclick="runLevel(37)">Run code</button><button class="ghost" onclick="resetLevel(37)">Reset</button></div>
+      <div class="result" id="result37"></div>
+      <div class="hint">Hint: f.read()</div>
+    </div>
+
+    <div class="level" id="level38">
+      <h2>Level 38: Scribe the note</h2>
+      <p>Open for writing and <code>write</code> "Hello".</p>
+      <div class="badges"><div class="badge">write()</div></div>
+      <div class="editor-wrap"><textarea id="editor38">f = open("file.txt", "w")\nf.write("Hello")</textarea></div>
+      <div class="controls"><button onclick="runLevel(38)">Run code</button><button class="ghost" onclick="resetLevel(38)">Reset</button></div>
+      <div class="result" id="result38"></div>
+      <div class="hint">Hint: f.write("...")</div>
+    </div>
+
+    <div class="level" id="level39">
+      <h2>Level 39: Enter the library</h2>
+      <p>Import <code>math</code> and set <code>root</code> to <code>math.sqrt(16)</code>.</p>
+      <div class="badges"><div class="badge">import</div></div>
+      <div class="editor-wrap"><textarea id="editor39">import math\nroot = math.sqrt(16)</textarea></div>
+      <div class="controls"><button onclick="runLevel(39)">Run code</button><button class="ghost" onclick="resetLevel(39)">Reset</button></div>
+      <div class="result" id="result39"></div>
+      <div class="hint">Hint: import math</div>
+    </div>
+
+    <div class="level" id="level40">
+      <h2>Level 40: Use the scroll</h2>
+      <p>From <code>math</code>, compute <code>pi</code> using <code>math.pi</code> into <code>circle</code>.</p>
+      <div class="badges"><div class="badge">module attributes</div></div>
+      <div class="editor-wrap"><textarea id="editor40">import math\ncircle = math.pi</textarea></div>
+      <div class="controls"><button onclick="runLevel(40)">Run code</button><button class="ghost" onclick="resetLevel(40)">Reset</button></div>
+      <div class="result" id="result40"></div>
+      <div class="hint">Hint: math.pi</div>
+    </div>
+
+    <!-- Advanced (41–45) -->
+    <div class="level" id="level41">
+      <h2>Level 41: Handle the mishap</h2>
+      <p>Use <code>try/except</code> to catch any error and set <code>ok=True</code>.</p>
+      <div class="badges"><div class="badge">exceptions</div></div>
+      <div class="editor-wrap"><textarea id="editor41">ok = False\ntry:\n    int("x")\nexcept Exception:\n    ok = True</textarea></div>
+      <div class="controls"><button onclick="runLevel(41)">Run code</button><button class="ghost" onclick="resetLevel(41)">Reset</button></div>
+      <div class="result" id="result41"></div>
+      <div class="hint">Hint: try: ... except:</div>
+    </div>
+
+    <div class="level" id="level42">
+      <h2>Level 42: Swift incantation</h2>
+      <p>Create <code>double</code> as <code>lambda x: x*2</code>.</p>
+      <div class="badges"><div class="badge">lambda</div></div>
+      <div class="editor-wrap"><textarea id="editor42">double = lambda x: x*2</textarea></div>
+      <div class="controls"><button onclick="runLevel(42)">Run code</button><button class="ghost" onclick="resetLevel(42)">Reset</button></div>
+      <div class="result" id="result42"></div>
+      <div class="hint">Hint: lambda x: ...</div>
+    </div>
+
+    <div class="level" id="level43">
+      <h2>Level 43: The iterator’s path</h2>
+      <p>Make iterator <code>it</code> from <code>[1,2]</code> and call <code>next(it)</code>.</p>
+      <div class="badges"><div class="badge">iter/next</div></div>
+      <div class="editor-wrap"><textarea id="editor43">it = iter([1,2])\nfirst = next(it)</textarea></div>
+      <div class="controls"><button onclick="runLevel(43)">Run code</button><button class="ghost" onclick="resetLevel(43)">Reset</button></div>
+      <div class="result" id="result43"></div>
+      <div class="hint">Hint: iter([...]); next(it)</div>
+    </div>
+
+    <div class="level" id="level44">
+      <h2>Level 44: The well of yields</h2>
+      <p>Write generator <code>gen()</code> yielding 1 then 2.</p>
+      <div class="badges"><div class="badge">generators</div></div>
+      <div class="editor-wrap"><textarea id="editor44">def gen():\n    yield 1\n    yield 2</textarea></div>
+      <div class="controls"><button onclick="runLevel(44)">Run code</button><button class="ghost" onclick="resetLevel(44)">Reset</button></div>
+      <div class="result" id="result44"></div>
+      <div class="hint">Hint: yield</div>
+    </div>
+
+    <div class="level" id="level45">
+      <h2>Level 45: Blessing of decorators</h2>
+      <p>Create decorator <code>wrap(fn)</code> and apply <code>@wrap</code> to <code>hello()</code>.</p>
+      <div class="badges"><div class="badge">decorators</div></div>
+      <div class="editor-wrap"><textarea id="editor45">def wrap(fn):\n    def inner():\n        return fn()\n    return inner\n\n@wrap\ndef hello():\n    return "hi"</textarea></div>
+      <div class="controls"><button onclick="runLevel(45)">Run code</button><button class="ghost" onclick="resetLevel(45)">Reset</button></div>
+      <div class="result" id="result45"></div>
+      <div class="hint">Hint: @decorator</div>
+    </div>
+
+    <div class="footer">Python Quest — all client-side, teaching Python concepts via syntax recognition. No server. No runtime.</div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/anyword-hint.min.js"></script>
+
+  <script>
+    // Level metadata
+    const TOTAL_LEVELS = 45;
+    const titles = {
+      1:"Variables",2:"Strings",3:"Lists",4:"Tuples",5:"Type conversion",
+      6:"String upper",7:"String lower",8:"Slicing",9:"Reverse",10:"f-strings",
+      11:"Append",12:"Sum loop",13:"Comprehension",14:"Sort",15:"Nested lists",
+      16:"Dict create",17:"Dict access",18:"Dict items",19:"Dict update",20:"Nested dicts",
+      21:"if",22:"if/else",23:"elif",24:"while",25:"continue",
+      26:"def",27:"params + return",28:"return",29:"defaults",30:"recursion",
+      31:"class",32:"__init__",33:"method",34:"inheritance",35:"override",
+      36:"open",37:"read",38:"write",39:"import",40:"module attr",
+      41:"try/except",42:"lambda",43:"iter/next",44:"yield",45:"decorator"
+    };
+
+    // Build map
+    const mapEl = document.getElementById('map');
+    for (let i=1;i<=TOTAL_LEVELS;i++){
+      const node = document.createElement('div');
+      node.className = "node " + (i===1 ? "active":"locked");
+      node.id = "node"+i;
+      node.innerHTML = `<div><strong>L${i}</strong></div><div style="font-size:12px;color:#a7b0c2">${titles[i]||'Level'}</div>`;
+      mapEl.appendChild(node);
+    }
+
+    // CodeMirror editors
+    const editors = {};
+    for (let i=1;i<=TOTAL_LEVELS;i++){
+      const ta = document.getElementById("editor"+i);
+      if (ta) {
+        editors[i] = CodeMirror.fromTextArea(ta, {
+          mode: "python",
+          theme: "dracula",
+          lineNumbers: true,
+          indentUnit: 4,
+          extraKeys: {
+            "Ctrl-Space": function(cm){ cm.showHint({hint: CodeMirror.hint.anyword}); }
+          }
+        });
+      }
+    }
+
+    // State
+    let progress = 0, score = 0, streak = 0;
+    const progressEl = document.getElementById("progress");
+    const scoreEl = document.getElementById("score");
+    const streakEl = document.getElementById("streak");
+
+    function setHUD(){
+      progressEl.textContent = `Progress: ${progress} / ${TOTAL_LEVELS}`;
+      scoreEl.textContent = `Score: ${score}`;
+      streakEl.textContent = `Streak: ${streak}`;
+    }
+    setHUD();
+
+    function resetLevel(n){
+      if (!editors[n]) return;
+      editors[n].setValue(document.getElementById("editor"+n).defaultValue || "");
+      document.getElementById("result"+n).textContent = "";
+    }
+
+    function unlockNext(n){
+      const curr = document.getElementById("level"+n);
+      const next = document.getElementById("level"+(n+1));
+      const currNode = document.getElementById("node"+n);
+      const nextNode = document.getElementById("node"+(n+1));
+      if (currNode) currNode.classList.remove("active"), currNode.classList.add("completed");
+      if (nextNode) nextNode.classList.remove("locked"), nextNode.classList.add("active");
+      if (next) {
+        setTimeout(()=>{ curr.classList.remove("active"); next.classList.add("active"); }, 800);
+      }
+    }
+
+    function markSuccess(n){
+      const res = document.getElementById("result"+n);
+      res.textContent = `✅ Level ${n} complete!`;
+      res.style.color = "#93d79c";
+      score += 10; streak += 1; progress = Math.max(progress, n);
+      setHUD();
+    }
+
+    function markFail(n, msg){
+      const res = document.getElementById("result"+n);
+      res.textContent = `❌ ${msg || 'Not quite. Check the hint and try again.'}`;
+      res.style.color = "#ff9aa2";
+      streak = 0; setHUD();
+    }
+
+    // Validation helpers (regex-based, tolerant whitespace)
+    function hasPattern(code, pattern){
+      return new RegExp(pattern).test(code);
+    }
+
+    // Per-level validation
+    function validate(level, code){
+      switch(level){
+        // Variables & data types
+        case 1: return hasPattern(code, /(^|\n)\s*x\s*=\s*\d+/);
+        case 2: return hasPattern(code, /(^|\n)\s*name\s*=\s*["'][^"']*["']/);
+        case 3: return hasPattern(code, /
+
+\[\s*1\s*,\s*2\s*,\s*3\s*\]
+
+/);
+        case 4: return hasPattern(code, /(^|\n)\s*coords\s*=\s*\(\s*\d+\s*,\s*\d+\s*\)/);
+        case 5: return hasPattern(code, /(^|\n)\s*n\s*=\s*int\(\s*["']\d+["']\s*\)/);
+
+        // Strings
+        case 6: return hasPattern(code, /\.upper\(\s*\)/);
+        case 7: return hasPattern(code, /\.lower\(\s*\)/);
+        case 8: return hasPattern(code, /
+
+\[\s*0\s*:\s*3\s*\]
+
+/);
+        case 9: return hasPattern(code, /
+
+\[\s*:\s*:\s*-?1\s*\]
+
+/);
+        case 10: return hasPattern(code, /f["'][^"']*{\s*name\s*}[^"']*["']/);
+
+        // Lists
+        case 11: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*
+
+\[\s*\]
+
+\s*(\n|.)*\.append\(\s*["'][^"']*["']\s*\)/);
+        case 12: return hasPattern(code, /(^|\n)\s*for\s+\w+\s+in\s+\w+\s*:/) && hasPattern(code, /\btotal\b/) && hasPattern(code, /\+=\s*\w+/);
+        case 13: return hasPattern(code, /
+
+\[\s*\w+\s*\*\s*2\s+for\s+\w+\s+in\s+\w+\s*\]
+
+/);
+        case 14: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*
+
+\[.*\]
+
+\s*(\n|.)*\.\s*sort\(\s*\)/);
+        case 15: return hasPattern(code, /
+
+\[\s*
+
+\[.+\]
+
+\s*,\s*
+
+\[.+\]
+
+\s*\]
+
+/);
+
+        // Dictionaries
+        case 16: return hasPattern(code, /\{\s*["']\w+["']\s*:\s*\d+\s*\}/);
+        case 17: return hasPattern(code, /
+
+\[\s*["']\w+["']\s*\]
+
+/);
+        case 18: return hasPattern(code, /for\s+\w+\s*,\s*\w+\s+in\s+\w+\.items\(\s*\)\s*:/);
+        case 19: return hasPattern(code, /\w+\s*
+
+\[\s*["']\w+["']\s*\]
+
+\s*=\s*\d+/);
+        case 20: return hasPattern(code, /\{\s*["']\w+["']\s*:\s*\{\s*["']\w+["']\s*:\s*["'][^"']+["']\s*\}\s*\}/);
+
+        // Control flow
+        case 21: return hasPattern(code, /if\s+\w+\s*>\s*\d+\s*:/) && hasPattern(code, /\bstatus\b\s*=\s*["']safe["']/);
+        case 22: return hasPattern(code, /if\s+.*\n[^]*else\s*:/);
+        case 23: return hasPattern(code, /elif\s+.*:/);
+        case 24: return hasPattern(code, /while\s+\w+\s*<\s*\d+\s*:/);
+        case 25: return hasPattern(code, /for\s+\w+\s+in\s*
+
+\[.*\]
+
+\s*:/) && hasPattern(code, /if\s+\w+\s*==\s*\d+\s*:\s*\n\s*continue/);
+
+        // Functions
+        case 26: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*\)\s*:/);
+        case 27: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*\w+\s*\)\s*:/) && hasPattern(code, /return\s+f["'][^"']*{\s*\w+\s*}[^"']*["']/);
+        case 28: return hasPattern(code, /(^|\n)\s*def\s+add\(\s*\w+\s*,\s*\w+\s*\)\s*:/) && hasPattern(code, /return\s+\w+\s*\+\s*\w+/);
+        case 29: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*name\s*=\s*["'][^"']+["']\s*\)\s*:/);
+        case 30: return hasPattern(code, /def\s+factorial\(\s*n\s*\)\s*:/) && hasPattern(code, /if\s+n\s*==\s*0\s*:\s*\n\s*return\s+1/) && hasPattern(code, /return\s+n\s*\*\s*factorial\(\s*n\s*-\s*1\s*\)/);
+
+        // Classes
+        case 31: return hasPattern(code, /(^|\n)\s*class\s+\w+\s*:/);
+        case 32: return hasPattern(code, /def\s+__init__\(\s*self\s*,\s*\w+\s*,\s*\w+\s*\)\s*:/) && hasPattern(code, /self\.\w+\s*=\s*\w+/);
+        case 33: return hasPattern(code, /def\s+attack\(\s*self\s*\)\s*:/);
+        case 34: return hasPattern(code, /class\s+\w+\s*:\s*\n[^]*class\s+\w+\(\s*\w+\s*\)\s*:/);
+        case 35: return hasPattern(code, /class\s+\w+\s*:\s*\n\s*def\s+speak\(\s*self\s*\)\s*:/) && hasPattern(code, /class\s+\w+\(\s*\w+\s*\)\s*:\s*\n\s*def\s+speak\(\s*self\s*\)\s*:/);
+
+        // Files & modules
+        case 36: return hasPattern(code, /open\(\s*["']file\.txt["']\s*,\s*["']r["']\s*\)/);
+        case 37: return hasPattern(code, /f\s*=\s*open\(.+\)\s*\n[^]*\bcontent\b\s*=\s*f\.read\(\s*\)/);
+        case 38: return hasPattern(code, /open\(\s*["']file\.txt["']\s*,\s*["']w["']\s*\)\s*\n[^]*write\(\s*["'][^"']+["']\s*\)/);
+        case 39: return hasPattern(code, /(^|\n)\s*import\s+math/) && hasPattern(code, /\bmath\.sqrt\(\s*16\s*\)/);
+        case 40: return hasPattern(code, /(^|\n)\s*import\s+math/) && hasPattern(code, /\bmath\.pi\b/);
+
+        // Advanced
+        case 41: return hasPattern(code, /try\s*:\s*\n[^]*except\s+\w*:?/);
+        case 42: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*lambda\s+\w+\s*:\s*.+/);
+        case 43: return hasPattern(code, /(^|\n)\s*it\s*=\s*iter\(\s*
+
+\[.*\]
+
+\s*\)/) && hasPattern(code, /next\(\s*it\s*\)/);
+        case 44: return hasPattern(code, /def\s+\w+\(\s*\)\s*:\s*\n\s*yield\s+\d+\s*\n\s*yield\s+\d+/);
+        case 45: return hasPattern(code, /(^|\n)\s*def\s+\w+\(\s*\w+\s*\)\s*:\s*\n\s*def\s+\w+\(\s*\)\s*:\s*\n[^]*return\s+\w+\(\s*\)\s*\n\s*return\s+\w+\s*\n[^]*@\s*\w+\s*\n\s*def\s+\w+\(\s*\)\s*:/);
+        default: return false;
+      }
+    }
+
+    function runLevel(n){
+      const editor = editors[n];
+      if (!editor){ return; }
+      const code = editor.getValue();
+      const ok = validate(n, code);
+      if (ok){
+        markSuccess(n);
+        unlockNext(n);
+      } else {
+        markFail(n);
+      }
+    }
+
+    // Update defaultValue for reset to work with starting code
+    for (let i=1;i<=TOTAL_LEVELS;i++){
+      const ta = document.getElementById("editor"+i);
+      if (ta) ta.defaultValue = editors[i].getValue();
+    }
+  </script>
+</body>
+</html>
