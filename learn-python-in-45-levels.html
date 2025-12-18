@@ -629,125 +629,73 @@
     }
 
     // Per-level validation
-    function validate(level, code){
-      switch(level){
-        // Variables & data types
-        case 1: return hasPattern(code, /(^|\n)\s*x\s*=\s*\d+/);
-        case 2: return hasPattern(code, /(^|\n)\s*name\s*=\s*["'][^"']*["']/);
-        case 3: return hasPattern(code, /
+function validate(level, code){
+  switch(level){
+    // Variables & Data Types
+    case 1: return code.includes("x =");
+    case 2: return code.includes("name =");
+    case 3: return code.includes("[1, 2, 3]");
+    case 4: return code.includes("coords = (");
+    case 5: return code.includes("int(");
 
-\[\s*1\s*,\s*2\s*,\s*3\s*\]
+    // Strings
+    case 6: return code.includes(".upper()");
+    case 7: return code.includes(".lower()");
+    case 8: return code.includes("[0:3]");
+    case 9: return code.includes("[::-1]");
+    case 10: return code.includes("f\"");
 
-/);
-        case 4: return hasPattern(code, /(^|\n)\s*coords\s*=\s*\(\s*\d+\s*,\s*\d+\s*\)/);
-        case 5: return hasPattern(code, /(^|\n)\s*n\s*=\s*int\(\s*["']\d+["']\s*\)/);
+    // Lists
+    case 11: return code.includes(".append(");
+    case 12: return code.includes("for") && code.includes("total");
+    case 13: return code.includes("[x*2 for x in");
+    case 14: return code.includes(".sort()");
+    case 15: return code.includes("[[") && code.includes("]]");
 
-        // Strings
-        case 6: return hasPattern(code, /\.upper\(\s*\)/);
-        case 7: return hasPattern(code, /\.lower\(\s*\)/);
-        case 8: return hasPattern(code, /
+    // Dictionaries
+    case 16: return code.includes("{") && code.includes(":");
+    case 17: return code.includes("[\"apple\"]");
+    case 18: return code.includes(".items()");
+    case 19: return code.includes("food[") && code.includes("=");
+    case 20: return code.includes("{") && code.includes("{");
 
-\[\s*0\s*:\s*3\s*\]
+    // Control Flow
+    case 21: return code.includes("if") && code.includes("status");
+    case 22: return code.includes("else");
+    case 23: return code.includes("elif");
+    case 24: return code.includes("while");
+    case 25: return code.includes("continue");
 
-/);
-        case 9: return hasPattern(code, /
+    // Functions
+    case 26: return code.includes("def greet()");
+    case 27: return code.includes("def greet(") && code.includes("return");
+    case 28: return code.includes("def add(") && code.includes("return");
+    case 29: return code.includes("def greet(") && code.includes("=");
+    case 30: return code.includes("factorial") && code.includes("return");
 
-\[\s*:\s*:\s*-?1\s*\]
+    // Classes & OOP
+    case 31: return code.includes("class");
+    case 32: return code.includes("__init__");
+    case 33: return code.includes("def attack");
+    case 34: return code.includes("(") && code.includes(")");
+    case 35: return code.includes("def speak");
 
-/);
-        case 10: return hasPattern(code, /f["'][^"']*{\s*name\s*}[^"']*["']/);
+    // Files & Modules
+    case 36: return code.includes("open(");
+    case 37: return code.includes("read(");
+    case 38: return code.includes("write(");
+    case 39: return code.includes("import math") && code.includes("sqrt");
+    case 40: return code.includes("math.pi");
 
-        // Lists
-        case 11: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*
-
-\[\s*\]
-
-\s*(\n|.)*\.append\(\s*["'][^"']*["']\s*\)/);
-        case 12: return hasPattern(code, /(^|\n)\s*for\s+\w+\s+in\s+\w+\s*:/) && hasPattern(code, /\btotal\b/) && hasPattern(code, /\+=\s*\w+/);
-        case 13: return hasPattern(code, /
-
-\[\s*\w+\s*\*\s*2\s+for\s+\w+\s+in\s+\w+\s*\]
-
-/);
-        case 14: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*
-
-\[.*\]
-
-\s*(\n|.)*\.\s*sort\(\s*\)/);
-        case 15: return hasPattern(code, /
-
-\[\s*
-
-\[.+\]
-
-\s*,\s*
-
-\[.+\]
-
-\s*\]
-
-/);
-
-        // Dictionaries
-        case 16: return hasPattern(code, /\{\s*["']\w+["']\s*:\s*\d+\s*\}/);
-        case 17: return hasPattern(code, /
-
-\[\s*["']\w+["']\s*\]
-
-/);
-        case 18: return hasPattern(code, /for\s+\w+\s*,\s*\w+\s+in\s+\w+\.items\(\s*\)\s*:/);
-        case 19: return hasPattern(code, /\w+\s*
-
-\[\s*["']\w+["']\s*\]
-
-\s*=\s*\d+/);
-        case 20: return hasPattern(code, /\{\s*["']\w+["']\s*:\s*\{\s*["']\w+["']\s*:\s*["'][^"']+["']\s*\}\s*\}/);
-
-        // Control flow
-        case 21: return hasPattern(code, /if\s+\w+\s*>\s*\d+\s*:/) && hasPattern(code, /\bstatus\b\s*=\s*["']safe["']/);
-        case 22: return hasPattern(code, /if\s+.*\n[^]*else\s*:/);
-        case 23: return hasPattern(code, /elif\s+.*:/);
-        case 24: return hasPattern(code, /while\s+\w+\s*<\s*\d+\s*:/);
-        case 25: return hasPattern(code, /for\s+\w+\s+in\s*
-
-\[.*\]
-
-\s*:/) && hasPattern(code, /if\s+\w+\s*==\s*\d+\s*:\s*\n\s*continue/);
-
-        // Functions
-        case 26: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*\)\s*:/);
-        case 27: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*\w+\s*\)\s*:/) && hasPattern(code, /return\s+f["'][^"']*{\s*\w+\s*}[^"']*["']/);
-        case 28: return hasPattern(code, /(^|\n)\s*def\s+add\(\s*\w+\s*,\s*\w+\s*\)\s*:/) && hasPattern(code, /return\s+\w+\s*\+\s*\w+/);
-        case 29: return hasPattern(code, /(^|\n)\s*def\s+greet\(\s*name\s*=\s*["'][^"']+["']\s*\)\s*:/);
-        case 30: return hasPattern(code, /def\s+factorial\(\s*n\s*\)\s*:/) && hasPattern(code, /if\s+n\s*==\s*0\s*:\s*\n\s*return\s+1/) && hasPattern(code, /return\s+n\s*\*\s*factorial\(\s*n\s*-\s*1\s*\)/);
-
-        // Classes
-        case 31: return hasPattern(code, /(^|\n)\s*class\s+\w+\s*:/);
-        case 32: return hasPattern(code, /def\s+__init__\(\s*self\s*,\s*\w+\s*,\s*\w+\s*\)\s*:/) && hasPattern(code, /self\.\w+\s*=\s*\w+/);
-        case 33: return hasPattern(code, /def\s+attack\(\s*self\s*\)\s*:/);
-        case 34: return hasPattern(code, /class\s+\w+\s*:\s*\n[^]*class\s+\w+\(\s*\w+\s*\)\s*:/);
-        case 35: return hasPattern(code, /class\s+\w+\s*:\s*\n\s*def\s+speak\(\s*self\s*\)\s*:/) && hasPattern(code, /class\s+\w+\(\s*\w+\s*\)\s*:\s*\n\s*def\s+speak\(\s*self\s*\)\s*:/);
-
-        // Files & modules
-        case 36: return hasPattern(code, /open\(\s*["']file\.txt["']\s*,\s*["']r["']\s*\)/);
-        case 37: return hasPattern(code, /f\s*=\s*open\(.+\)\s*\n[^]*\bcontent\b\s*=\s*f\.read\(\s*\)/);
-        case 38: return hasPattern(code, /open\(\s*["']file\.txt["']\s*,\s*["']w["']\s*\)\s*\n[^]*write\(\s*["'][^"']+["']\s*\)/);
-        case 39: return hasPattern(code, /(^|\n)\s*import\s+math/) && hasPattern(code, /\bmath\.sqrt\(\s*16\s*\)/);
-        case 40: return hasPattern(code, /(^|\n)\s*import\s+math/) && hasPattern(code, /\bmath\.pi\b/);
-
-        // Advanced
-        case 41: return hasPattern(code, /try\s*:\s*\n[^]*except\s+\w*:?/);
-        case 42: return hasPattern(code, /(^|\n)\s*\w+\s*=\s*lambda\s+\w+\s*:\s*.+/);
-        case 43: return hasPattern(code, /(^|\n)\s*it\s*=\s*iter\(\s*
-
-\[.*\]
-
-\s*\)/) && hasPattern(code, /next\(\s*it\s*\)/);
-        case 44: return hasPattern(code, /def\s+\w+\(\s*\)\s*:\s*\n\s*yield\s+\d+\s*\n\s*yield\s+\d+/);
-        case 45: return hasPattern(code, /(^|\n)\s*def\s+\w+\(\s*\w+\s*\)\s*:\s*\n\s*def\s+\w+\(\s*\)\s*:\s*\n[^]*return\s+\w+\(\s*\)\s*\n\s*return\s+\w+\s*\n[^]*@\s*\w+\s*\n\s*def\s+\w+\(\s*\)\s*:/);
-        default: return false;
-      }
-    }
+    // Advanced Topics
+    case 41: return code.includes("try") && code.includes("except");
+    case 42: return code.includes("lambda");
+    case 43: return code.includes("iter(") && code.includes("next(");
+    case 44: return code.includes("yield");
+    case 45: return code.includes("@") && code.includes("def");
+    default: return false;
+  }
+}
 
     function runLevel(n){
       const editor = editors[n];
